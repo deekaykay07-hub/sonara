@@ -1,1 +1,837 @@
-FULL_HTML_HERE
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sonara • Speech to Text</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+
+    :root {
+      --accent: 99 102 241;
+    }
+
+    body {
+      font-family: 'Inter', system_ui, sans-serif;
+    }
+
+    .font-display {
+      font-family: 'Space Grotesk', 'Inter', system_ui, sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    .glass {
+      background: rgba(255,255,255, 0.06);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255, 0.08);
+    }
+
+    .section-card {
+      background: rgba(24, 24, 27, 0.8);
+      border: 1px solid rgba(63, 63, 70, 0.6);
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                  box-shadow 0.2s cubic-bezier(0.4, 0.0, 0.2, 1),
+                  border-color 0.2s;
+    }
+
+    .section-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
+
+    .dropzone {
+      transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+      border: 2px dashed rgba(163, 163, 172, 0.4);
+    }
+
+    .dropzone.dragover {
+      border-color: rgb(129 140 248);
+      background: rgba(99, 102, 241, 0.06);
+      transform: scale(1.005);
+    }
+
+    .accent-gradient {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .glow-indigo {
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3),
+                  0 10px 15px -3px rgba(99, 102, 241, 0.2);
+    }
+
+    .nav-gradient {
+      background: linear-gradient(to right, rgba(24,24,27,0.95), rgba(9,9,11,0.95));
+      backdrop-filter: blur(12px);
+    }
+
+    .transcript-text {
+      font-size: 15.5px;
+      line-height: 1.7;
+      font-feature-settings: "ss02";
+    }
+
+    .segment-row {
+      transition: background 0.1s ease;
+    }
+    .segment-row:hover {
+      background: rgba(63, 63, 70, 0.35);
+    }
+
+    .model-pill {
+      transition: all 0.1s ease;
+    }
+    .model-pill.active {
+      background-color: rgb(63 66 243);
+      color: white;
+      border-color: rgb(99 102 241);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .wave {
+      animation: wave 1.2s ease-in-out infinite;
+    }
+    .wave:nth-child(2) { animation-delay: 150ms; }
+    .wave:nth-child(3) { animation-delay: 300ms; }
+    .wave:nth-child(4) { animation-delay: 450ms; }
+
+    @keyframes wave {
+      0%, 100% { height: 6px; }
+      50% { height: 22px; }
+    }
+
+    .result-enter {
+      animation: resultPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes resultPop {
+      0% { transform: scale(0.96) translateY(10px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .custom-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: #3f3f46 #18181b;
+    }
+
+    .metric {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cool-bg {
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,0.12) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(168,85,247,0.09) 0%, transparent 55%),
+        #09090b;
+    }
+
+    .file-card {
+      background: #18181b;
+      border: 1px solid #3f3f46;
+    }
+
+    .status-dot {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200 cool-bg min-h-screen">
+  <!-- Top nav -->
+  <nav class="border-b border-white/10 sticky top-0 z-50 nav-gradient">
+    <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-x-3">
+        <!-- Logo -->
+        <div class="flex items-center gap-x-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-indigo-950/50">
+            <i class="fa-solid fa-microphone text-white text-xl"></i>
+          </div>
+          <div>
+            <span class="font-display text-2xl tracking-tighter font-semibold">Sonara</span>
+          </div>
+        </div>
+        <div class="px-2.5 py-0.5 text-[10px] font-medium tracking-[0.125em] rounded-full border border-white/10 bg-white/5 text-zinc-400">STT</div>
+      </div>
+
+      <div class="flex items-center gap-x-2 text-sm">
+        <a href="https://github.com/deekaykay07-hub/sonara" target="_blank"
+           class="flex items-center gap-x-2 px-3 py-1.5 rounded-xl hover:bg-white/5 transition-colors text-zinc-400 hover:text-zinc-200">
+          <i class="fa-brands fa-github"></i>
+          <span class="hidden sm:inline text-xs font-medium">GitHub</span>
+        </a>
+        <div class="hidden sm:flex items-center gap-x-1.5 px-3 py-1 rounded-xl bg-white/5 text-xs border border-white/10">
+          <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+          <span class="text-emerald-400 font-medium">Local &amp; Private</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-5xl mx-auto px-6 pt-10 pb-24">
+    <!-- Hero -->
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-x-2 rounded-3xl bg-white/5 border border-white/10 px-4 h-8 text-sm mb-4">
+        <span class="text-emerald-400"><i class="fa-solid fa-check"></i></span>
+        <span class="text-zinc-300">Powered by faster-whisper • Runs 100% locally</span>
+      </div>
+      
+      <h1 class="font-display text-6xl tracking-tighter font-semibold leading-none mb-3">
+        Transcribe audio &amp; video.<br>
+        <span class="accent-gradient">Beautifully.</span>
+      </h1>
+      <p class="text-xl text-zinc-400 max-w-md mx-auto">
+        Upload anything. Get accurate text. Copy instantly.
+      </p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="max-w-4xl mx-auto">
+      <div class="section-card rounded-3xl p-8 shadow-2xl shadow-black/50">
+        
+        <!-- Dropzone -->
+        <div id="dropzone"
+             class="dropzone group rounded-3xl p-14 flex flex-col items-center justify-center text-center cursor-pointer border-2 border-dashed border-zinc-700 hover:border-zinc-500">
+          <div class="w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-cloud-upload-alt text-4xl text-zinc-400 group-hover:text-indigo-400 transition-colors"></i>
+          </div>
+          <div class="text-2xl font-semibold tracking-tight mb-1">Drop your audio or video here</div>
+          <div class="text-zinc-400 mb-5">or click anywhere to browse</div>
+          
+          <div class="flex items-center gap-x-2 text-xs text-zinc-500">
+            <div class="px-3 py-1 bg-zinc-900 rounded-xl border border-white/10">MP3</div>
+            <div class="px-3 py-1 bg-zinc-900 rounded-xl border border-white/10">WAV</div>
+            <div class="px-3 py-1 bg-zinc-900 rounded-xl border border-white/10">M4A</div>
+            <div class="px-3 py-1 bg-zinc-900 rounded-xl border border-white/10">MP4</div>
+            <div class="px-3 py-1 bg-zinc-900 rounded-xl border border-white/10">MOV</div>
+            <div class="px-3 py-1 bg-zinc-900 rounded-xl border border-white/10">+ more</div>
+          </div>
+          <div class="text-[10px] text-zinc-500 mt-4">Max {{ max_mb }} MB • First run downloads the model</div>
+          
+          <input type="file" id="file-input" class="hidden" 
+                 accept="audio/*,video/*,.mp3,.wav,.m4a,.flac,.ogg,.mp4,.mov,.mkv,.avi,.webm">
+        </div>
+
+        <!-- Selected File Card -->
+        <div id="file-card" class="hidden mt-6 file-card rounded-2xl p-5">
+          <div class="flex items-start gap-4">
+            <div id="file-icon" 
+                 class="w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center bg-zinc-800 text-2xl">
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-x-2">
+                <div id="file-name" class="font-semibold text-lg truncate"></div>
+                <div id="file-type-badge" 
+                     class="text-[10px] font-mono px-1.5 py-px rounded bg-zinc-800 text-zinc-400 border border-white/10"></div>
+              </div>
+              <div class="flex items-center gap-x-3 text-sm text-zinc-400 mt-0.5">
+                <div><span id="file-size"></span></div>
+                <div id="file-duration" class="hidden">• <span></span></div>
+              </div>
+            </div>
+            <button id="remove-file"
+                    class="text-zinc-400 hover:text-red-400 hover:bg-red-950/30 w-9 h-9 flex items-center justify-center rounded-xl transition-all">
+              <i class="fa-solid fa-times text-lg"></i>
+            </button>
+          </div>
+
+          <!-- Mini preview player -->
+          <div id="preview-container" class="mt-4 hidden">
+            <audio id="audio-preview" controls class="w-full rounded-xl bg-black"></audio>
+            <video id="video-preview" controls class="w-full max-h-[220px] rounded-2xl bg-black hidden"></video>
+          </div>
+        </div>
+
+        <!-- Options -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Model selection -->
+          <div>
+            <div class="flex items-center gap-x-2 text-xs font-semibold tracking-widest text-zinc-400 mb-2.5 px-1">
+              <i class="fa-solid fa-microchip"></i>
+              <span>MODEL SIZE</span>
+            </div>
+            <div id="model-pills" class="flex flex-wrap gap-2">
+              <!-- Populated by JS -->
+            </div>
+            <div class="text-[10px] text-zinc-500 mt-2 px-1">Larger = better accuracy, slower &amp; more memory</div>
+          </div>
+
+          <!-- Language -->
+          <div>
+            <div class="flex items-center gap-x-2 text-xs font-semibold tracking-widest text-zinc-400 mb-2.5 px-1">
+              <i class="fa-solid fa-globe"></i>
+              <span>LANGUAGE</span>
+            </div>
+            <select id="language-select"
+                    class="w-full bg-zinc-900 border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500/70">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Transcribe Button -->
+        <button id="transcribe-btn"
+                class="mt-8 w-full h-14 rounded-2xl bg-white text-zinc-950 font-semibold text-lg flex items-center justify-center gap-x-3 hover:bg-white/95 active:scale-[0.985] transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-xl shadow-indigo-950/40"
+                disabled>
+          <i class="fa-solid fa-magic mr-1"></i>
+          <span id="transcribe-text">Transcribe</span>
+        </button>
+        <div class="text-center text-[10px] text-zinc-500 mt-2">Runs on your machine • No data leaves your computer</div>
+      </div>
+
+      <!-- Processing State -->
+      <div id="processing-card" class="hidden mt-6 section-card rounded-3xl p-8 text-center">
+        <div class="flex justify-center mb-5">
+          <div class="flex items-end gap-1 h-8">
+            <div class="wave w-[5px] bg-indigo-400 rounded-full"></div>
+            <div class="wave w-[5px] bg-indigo-400 rounded-full"></div>
+            <div class="wave w-[5px] bg-violet-400 rounded-full"></div>
+            <div class="wave w-[5px] bg-violet-400 rounded-full"></div>
+          </div>
+        </div>
+        <div class="text-2xl font-semibold tracking-tight mb-1">Transcribing your file...</div>
+        <div id="processing-status" class="text-zinc-400 mb-4">Loading model &amp; processing audio</div>
+        
+        <div class="max-w-xs mx-auto">
+          <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-indigo-500 to-violet-500 w-2/3 animate-[progress_1.8s_ease-in-out_infinite]"></div>
+          </div>
+        </div>
+        <div class="mt-3 text-xs text-zinc-500">This may take 30 seconds to several minutes depending on file length and model</div>
+      </div>
+
+      <!-- Result Card -->
+      <div id="result-card" class="hidden mt-6 section-card rounded-3xl overflow-hidden result-enter">
+        <div class="px-7 pt-6 pb-4 border-b border-white/10 flex items-center justify-between bg-zinc-900/60">
+          <div>
+            <div class="font-semibold flex items-center gap-x-2">
+              <i class="fa-solid fa-align-left text-indigo-400"></i>
+              <span>Transcript</span>
+            </div>
+            <div id="result-meta" class="text-xs text-zinc-400 mt-0.5"></div>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <!-- Copy -->
+            <button id="copy-btn"
+                    class="flex items-center gap-x-2 px-4 h-9 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 text-sm font-medium transition-all">
+              <i class="fa-solid fa-copy"></i>
+              <span>Copy</span>
+            </button>
+            
+            <!-- Downloads -->
+            <button id="download-txt-btn"
+                    class="flex items-center gap-x-2 px-4 h-9 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 text-sm font-medium transition-all">
+              <i class="fa-solid fa-file-lines"></i>
+              <span>.txt</span>
+            </button>
+            <button id="download-srt-btn"
+                    class="flex items-center gap-x-2 px-4 h-9 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 text-sm font-medium transition-all">
+              <i class="fa-solid fa-closed-captioning"></i>
+              <span>.srt</span>
+            </button>
+            
+            <button id="new-transcription-btn"
+                    class="flex items-center gap-x-2 px-4 h-9 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-sm font-medium transition-all">
+              <i class="fa-solid fa-redo"></i>
+              <span>New</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main transcript (standard textarea = perfect native copy behavior) -->
+        <div class="p-7">
+          <textarea id="transcript-textarea" readonly
+                    class="transcript-text w-full h-72 bg-zinc-950 border border-white/10 rounded-2xl p-5 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/40 resize-y custom-scroll leading-relaxed"
+                    placeholder="Your transcript will appear here..."></textarea>
+          
+          <div class="flex items-center gap-x-2 text-[11px] text-emerald-400/90 mt-2 px-1">
+            <i class="fa-solid fa-info-circle"></i>
+            <span>Standard copy supported: <span class="font-medium">Ctrl/Cmd + C</span> or right-click → Copy</span>
+          </div>
+        </div>
+
+        <!-- Segments / Timestamps -->
+        <div id="segments-section" class="border-t border-white/10 px-7 py-5 bg-black/20">
+          <div class="flex items-center justify-between mb-3 px-1">
+            <div class="text-xs font-semibold tracking-widest text-zinc-400">TIMESTAMPS</div>
+            <div class="text-[10px] text-zinc-500">Click any line to copy it</div>
+          </div>
+          <div id="segments-list" class="max-h-[210px] overflow-auto custom-scroll pr-1 text-sm space-y-px">
+            <!-- JS populated segment rows -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="mt-8 text-center">
+        <div class="text-xs text-zinc-500">
+          Tip: Use <span class="font-medium text-zinc-400">Small</span> or <span class="font-medium text-zinc-400">Base</span> models for speed. 
+          Switch to <span class="font-medium text-zinc-400">Large-v3</span> when you need maximum accuracy.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900 border border-white/10 shadow-xl text-sm px-5 h-11 rounded-3xl items-center gap-x-2">
+    <div class="flex items-center gap-x-2">
+      <i class="fa-solid fa-check text-emerald-400"></i>
+      <span id="toast-text" class="font-medium"></span>
+    </div>
+  </div>
+
+  <script>
+    // Tailwind script
+    function initTailwind() {
+      document.documentElement.style.setProperty('--accent', '99 102 241');
+    }
+
+    // State
+    let currentFile = null;
+    let selectedModel = "small";
+    let currentJobId = null;
+    let pollInterval = null;
+    let currentResult = null;
+
+    const MODEL_LABELS = {{ model_sizes | tojson }};
+    const LANG_OPTIONS = {{ languages | tojson }};
+
+    function showToast(message, ms = 2200) {
+      const toast = document.getElementById('toast');
+      const text = document.getElementById('toast-text');
+      text.textContent = message;
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      setTimeout(() => {
+        toast.classList.remove('flex');
+        toast.classList.add('hidden');
+      }, ms);
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function formatTime(sec) {
+      if (!sec && sec !== 0) return '';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function formatSrtTime(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = Math.floor(sec % 60);
+      const ms = Math.floor((sec % 1) * 1000);
+      return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')},${ms.toString().padStart(3,'0')}`;
+    }
+
+    function createModelPills() {
+      const container = document.getElementById('model-pills');
+      container.innerHTML = '';
+      
+      Object.keys(MODEL_LABELS).forEach(key => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = `model-pill px-3.5 py-1.5 text-xs rounded-2xl border border-white/15 bg-zinc-900 hover:bg-zinc-800 ${key === selectedModel ? 'active' : ''}`;
+        pill.innerHTML = `
+          <div class="flex items-center gap-x-1.5">
+            <span class="font-semibold">${key}</span>
+            <span class="text-[10px] text-zinc-400 hidden sm:inline">${MODEL_LABELS[key].split('(')[0].trim()}</span>
+          </div>
+        `;
+        
+        pill.onclick = () => {
+          selectedModel = key;
+          // Update active state
+          document.querySelectorAll('#model-pills button').forEach(b => b.classList.remove('active'));
+          pill.classList.add('active');
+        };
+        
+        container.appendChild(pill);
+      });
+    }
+
+    function createLanguageSelect() {
+      const select = document.getElementById('language-select');
+      select.innerHTML = '';
+      
+      Object.entries(LANG_OPTIONS).forEach(([code, label]) => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = label;
+        if (code === '') opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function updateTranscribeButtonState() {
+      const btn = document.getElementById('transcribe-btn');
+      btn.disabled = !currentFile;
+      if (currentFile) {
+        btn.classList.remove('opacity-60');
+      }
+    }
+
+    function resetUI(keepFile = false) {
+      // Hide processing and result
+      document.getElementById('processing-card').classList.add('hidden');
+      document.getElementById('result-card').classList.add('hidden');
+      
+      if (!keepFile) {
+        currentFile = null;
+        document.getElementById('file-card').classList.add('hidden');
+        document.getElementById('dropzone').classList.remove('hidden');
+        document.getElementById('preview-container').classList.add('hidden');
+        document.getElementById('audio-preview').src = '';
+        document.getElementById('video-preview').src = '';
+      }
+      updateTranscribeButtonState();
+      clearInterval(pollInterval);
+      currentJobId = null;
+    }
+
+    function showFileCard(file) {
+      const card = document.getElementById('file-card');
+      const drop = document.getElementById('dropzone');
+      drop.classList.add('hidden');
+      card.classList.remove('hidden');
+
+      document.getElementById('file-name').textContent = file.name;
+      document.getElementById('file-size').textContent = formatBytes(file.size);
+      document.getElementById('file-type-badge').textContent = (file.type || file.name.split('.').pop().toUpperCase()).slice(0, 12);
+
+      const iconEl = document.getElementById('file-icon');
+      const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|mkv|avi|webm)$/i.test(file.name);
+      
+      iconEl.innerHTML = isVideo 
+        ? '<i class="fa-solid fa-film text-violet-400"></i>' 
+        : '<i class="fa-solid fa-music text-indigo-400"></i>';
+
+      // Preview
+      const previewContainer = document.getElementById('preview-container');
+      const audioEl = document.getElementById('audio-preview');
+      const videoEl = document.getElementById('video-preview');
+
+      previewContainer.classList.remove('hidden');
+      audioEl.classList.add('hidden');
+      videoEl.classList.add('hidden');
+
+      const url = URL.createObjectURL(file);
+
+      if (isVideo) {
+        videoEl.src = url;
+        videoEl.classList.remove('hidden');
+        videoEl.onloadedmetadata = () => {
+          const durEl = document.getElementById('file-duration');
+          durEl.classList.remove('hidden');
+          durEl.querySelector('span').textContent = formatTime(videoEl.duration);
+          URL.revokeObjectURL(url);
+        };
+      } else {
+        audioEl.src = url;
+        audioEl.classList.remove('hidden');
+        audioEl.onloadedmetadata = () => {
+          const durEl = document.getElementById('file-duration');
+          durEl.classList.remove('hidden');
+          durEl.querySelector('span').textContent = formatTime(audioEl.duration);
+          URL.revokeObjectURL(url);
+        };
+      }
+
+      currentFile = file;
+      updateTranscribeButtonState();
+    }
+
+    async function handleTranscribe() {
+      if (!currentFile) return;
+
+      const btn = document.getElementById('transcribe-btn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="flex items-center gap-x-2"><i class="fa-solid fa-spinner fa-spin"></i> Starting...</span>`;
+
+      const formData = new FormData();
+      formData.append('file', currentFile);
+      formData.append('model_size', selectedModel);
+      formData.append('language', document.getElementById('language-select').value);
+
+      try {
+        const resp = await fetch('/transcribe', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.detail || 'Upload failed');
+        }
+
+        const { job_id } = await resp.json();
+        currentJobId = job_id;
+
+        // Switch to processing UI
+        document.getElementById('file-card').classList.add('hidden');
+        document.getElementById('processing-card').classList.remove('hidden');
+        document.getElementById('result-card').classList.add('hidden');
+
+        startPolling(job_id);
+      } catch (e) {
+        alert("Error: " + e.message);
+        resetUI(true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    function startPolling(jobId) {
+      clearInterval(pollInterval);
+      
+      pollInterval = setInterval(async () => {
+        try {
+          const r = await fetch(`/jobs/${jobId}`);
+          if (!r.ok) {
+            clearInterval(pollInterval);
+            return;
+          }
+          const job = await r.json();
+
+          const statusEl = document.getElementById('processing-status');
+          statusEl.textContent = job.progress || job.status;
+
+          if (job.status === 'done' && job.result) {
+            clearInterval(pollInterval);
+            document.getElementById('processing-card').classList.add('hidden');
+            renderResult(job.result);
+          } else if (job.status === 'error') {
+            clearInterval(pollInterval);
+            document.getElementById('processing-card').classList.add('hidden');
+            alert("Transcription failed: " + (job.error || "Unknown error"));
+            resetUI(true);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }, 1100);
+    }
+
+    function renderResult(result) {
+      currentResult = result;
+      const card = document.getElementById('result-card');
+      card.classList.remove('hidden');
+
+      // Meta line
+      const meta = document.getElementById('result-meta');
+      const lang = result.language ? result.language.toUpperCase() : 'AUTO';
+      const proc = result.processing_time ? ` • ${result.processing_time}s` : '';
+      meta.innerHTML = `
+        <span class="font-mono text-emerald-400">${result.model}</span> 
+        <span class="mx-1 text-white/30">•</span> 
+        ${lang}${proc}
+        ${result.duration_seconds ? ` • ${formatTime(result.duration_seconds)} audio` : ''}
+      `;
+
+      // Main transcript - native textarea gives perfect Ctrl+C + right-click copy
+      const ta = document.getElementById('transcript-textarea');
+      ta.value = result.text || '(No speech detected)';
+      ta.focus();
+      ta.select(); // nice touch: pre-select so user can immediately copy
+
+      // Segments list
+      const list = document.getElementById('segments-list');
+      list.innerHTML = '';
+
+      if (result.segments && result.segments.length > 0) {
+        result.segments.forEach((seg, idx) => {
+          const row = document.createElement('div');
+          row.className = `segment-row flex items-start gap-3 px-3 py-2 rounded-xl cursor-pointer text-zinc-300 hover:text-zinc-100`;
+          
+          const start = formatTime(seg.start);
+          const end = formatTime(seg.end);
+          
+          row.innerHTML = `
+            <div class="font-mono text-xs w-[92px] flex-shrink-0 text-indigo-400/90 pt-px">${start} → ${end}</div>
+            <div class="flex-1 leading-snug text-[14.5px]">${seg.text}</div>
+            <button class="opacity-40 hover:opacity-100 text-xs px-2 self-start mt-px"><i class="fa-solid fa-copy"></i></button>
+          `;
+          
+          // Click whole row copies the line
+          row.onclick = (e) => {
+            if (e.target.closest('button')) return;
+            navigator.clipboard.writeText(seg.text).then(() => {
+              showToast("Segment copied");
+            });
+          };
+          
+          // Button copy
+          row.querySelector('button').onclick = (e) => {
+            e.stopImmediatePropagation();
+            navigator.clipboard.writeText(seg.text).then(() => showToast("Segment copied"));
+          };
+          
+          list.appendChild(row);
+        });
+      } else {
+        list.innerHTML = `<div class="px-3 py-2 text-sm text-zinc-400">No timestamped segments available.</div>`;
+      }
+
+      // Wire action buttons
+      setupResultButtons(result);
+    }
+
+    function setupResultButtons(result) {
+      // Copy full
+      document.getElementById('copy-btn').onclick = () => {
+        const ta = document.getElementById('transcript-textarea');
+        navigator.clipboard.writeText(ta.value).then(() => {
+          const orig = event.currentTarget;
+          showToast("Full transcript copied to clipboard");
+        });
+      };
+
+      // Download TXT
+      document.getElementById('download-txt-btn').onclick = () => {
+        const blob = new Blob([result.text || ''], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (result.filename || 'transcript').replace(/\.[^/.]+$/, "") + '.txt';
+        a.click();
+      };
+
+      // Download SRT
+      document.getElementById('download-srt-btn').onclick = () => {
+        if (!result.segments || !result.segments.length) {
+          showToast("No segments available for SRT");
+          return;
+        }
+        let srt = '';
+        result.segments.forEach((seg, i) => {
+          srt += `${i + 1}\n`;
+          srt += `${formatSrtTime(seg.start)} --> ${formatSrtTime(seg.end)}\n`;
+          srt += `${seg.text}\n\n`;
+        });
+        const blob = new Blob([srt.trim()], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (result.filename || 'transcript').replace(/\.[^/.]+$/, "") + '.srt';
+        a.click();
+      };
+
+      // New transcription
+      document.getElementById('new-transcription-btn').onclick = () => {
+        resetUI(false);
+        // scroll to top of the upload area
+        document.getElementById('dropzone').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      };
+    }
+
+    function setupDragAndDrop() {
+      const dropzone = document.getElementById('dropzone');
+      const fileInput = document.getElementById('file-input');
+
+      // Click to open file picker
+      dropzone.addEventListener('click', () => fileInput.click());
+
+      // File input
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          showFileCard(e.target.files[0]);
+        }
+      });
+
+      // Drag events
+      ['dragenter', 'dragover'].forEach(evt => {
+        dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          dropzone.classList.add('dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(evt => {
+        dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('dragover');
+        });
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        if (e.dataTransfer.files.length > 0) {
+          const f = e.dataTransfer.files[0];
+          // Basic type guard
+          if (!f.type.startsWith('audio/') && !f.type.startsWith('video/') && !/\.(mp3|wav|m4a|flac|ogg|mp4|mov|mkv|avi|webm)$/i.test(f.name)) {
+            alert("Please upload an audio or video file.");
+            return;
+          }
+          showFileCard(f);
+        }
+      });
+
+      // Also allow clicking the file card to change file
+      const fileCard = document.getElementById('file-card');
+      fileCard.addEventListener('click', (e) => {
+        if (e.target.id === 'remove-file' || e.target.closest('#remove-file')) return;
+        // re-trigger picker
+        fileInput.click();
+      });
+
+      // Remove file button
+      document.getElementById('remove-file').addEventListener('click', (e) => {
+        e.stopImmediatePropagation();
+        resetUI(false);
+      });
+    }
+
+    function setupTranscribeButton() {
+      const btn = document.getElementById('transcribe-btn');
+      btn.addEventListener('click', handleTranscribe);
+    }
+
+    function setupKeyboardShortcuts() {
+      document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + K focuses the dropzone / clears
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          resetUI(false);
+        }
+      });
+
+      // Make sure the textarea always allows normal copy behavior (it does by default)
+    }
+
+    function init() {
+      initTailwind();
+      createModelPills();
+      createLanguageSelect();
+      setupDragAndDrop();
+      setupTranscribeButton();
+      setupKeyboardShortcuts();
+
+      // Make first model pill active
+      const firstPill = document.querySelector('#model-pills button');
+      if (firstPill) firstPill.classList.add('active');
+
+      // Keyboard hint in console for devs
+      console.log('%c[Sonara] Ready. Ctrl/Cmd+K resets the UI.', 'color:#3f3f46');
+      
+      // Optional: pre-warm health check
+      fetch('/health').catch(() => {});
+    }
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
