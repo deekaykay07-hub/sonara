@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# Whisper models (they are large and get cached by faster-whisper / huggingface)
+~/.cache/whisper/
+~/.cache/huggingface/
+models/
+
+# Temporary files created during transcription
+tmp/
+temp/
+*.tmp
+*.wav
+*.mp3
+*.mp4
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs & runtime
+*.log
+*.pid
+server.log
+nohup.out
+
+# Environment
+.env
+.env.local
+
+# Uploaded files during dev
+uploads/
+audio/
+video/
