@@ -217,16 +217,16 @@ def cleanup_old_jobs(max_age_seconds: int = 3600):
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     cleanup_old_jobs()
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "app_name": APP_NAME,
-            "model_sizes": MODEL_SIZES,
-            "languages": LANGUAGES,
-            "max_mb": MAX_FILE_SIZE_MB,
-        },
+    # Use the underlying Jinja environment directly for maximum compatibility
+    template = templates.env.get_template("index.html")
+    html = template.render(
+        request=request,
+        app_name=APP_NAME,
+        model_sizes=MODEL_SIZES,
+        languages=LANGUAGES,
+        max_mb=MAX_FILE_SIZE_MB,
     )
+    return HTMLResponse(content=html)
 
 
 @app.post("/transcribe")

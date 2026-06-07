@@ -3,6 +3,9 @@
 **Beautiful, easy-to-use speech-to-text (STT) web app.**  
 Upload audio or video → get accurate transcription instantly. Powered by [faster-whisper](https://github.com/SYSTRAN/faster-whisper).
 
+### 🌐 Live Demo
+A public instance is running here: **http://165.22.112.6:6574**
+
 ![Sonara UI](https://raw.githubusercontent.com/deekaykay07-hub/sonara/main/.github/preview.png)
 
 ## ✨ Features
